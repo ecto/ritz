@@ -2,7 +2,9 @@ var ritz = require('./lib')();
 var Table = ritz.Table;
 var Player = ritz.players.Base;
 var SmartPlayer = ritz.players.SmartPlayer;
+var CardCounter = ritz.players.CardCounter;
 
+var sparkline = require('sparkline');
 var CLITable = require('cli-table');
 var charm = require('charm')();
 charm.on('^C', process.exit);
@@ -17,22 +19,31 @@ var player2 = new SmartPlayer();
 player2.name = 'Bob';
 player2.balance = 10000;
 
+var player3 = new CardCounter();
+player3.name = 'Carol';
+player3.balance = 10000;
+
 var table = new Table();
 table.logger = logger;
 player.join(table);
 player2.join(table);
+player3.join(table);
+
+var histories = [];
 
 function logger () {
   var clitable = new CLITable({
     head: [
       'player',
+      'round',
       'hand',
       'value',
       'status',
       'balance',
-      'hands played'
+      'count'
     ],
     colWidths: [
+      10,
       10,
       20,
       10,
@@ -44,11 +55,11 @@ function logger () {
 
   clitable.push([
     'Dealer',
+    table.game.round,
     table.game.dealer.hands[0].toString(),
     table.game.dealer.hands[0].getValue(),
     table.game.dealer.hands[0].status,
-    table.game.dealer.balance,
-    table.game.round
+    table.game.dealer.balance
   ]);
 
   table.game.players.forEach(function (player) {
@@ -58,11 +69,12 @@ function logger () {
 
     clitable.push([
       player.name,
+      player.handsPlayed,
       player.hands[0].toString(),
       player.hands[0].getValue(),
       player.hands[0].status,
       player.balance,
-      player.handsPlayed
+      player.count || 0
     ]);
   });
 
